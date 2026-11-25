@@ -1,9 +1,9 @@
 {
-	"id": "custom-codeblocks",
-	"name": "Custom Codeblocks",
+	"id": "literature-blocks",
+	"name": "Literature Blocks",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Custom rendered codeblocks for papers and more.",
+	"description": "Card-style blocks for tracking papers and other literature.",
 	"author": "Varun Neal Srivastava",
 	"authorUrl": "https://github.com/varunneal/",
 	"isDesktopOnly": true

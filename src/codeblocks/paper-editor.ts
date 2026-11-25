@@ -17,7 +17,7 @@ import {
 	type ViewUpdate,
 } from '@codemirror/view';
 import { editorInfoField, editorLivePreviewField } from 'obsidian';
-import type CustomCodeblocksPlugin from '../main';
+import type LiteratureBlocksPlugin from '../main';
 import {
 	renderPaperCard,
 	SEARCH_MATCH_CLASS,
@@ -25,7 +25,7 @@ import {
 	VISIBLE_PAPER_FIELDS,
 	type VisiblePaperField,
 } from './paper-card';
-import { parsePaperFields, type PaperData, type PaperFieldRanges } from './paper';
+import { parsePaperFields, scanPaperBlocks, type PaperData, type PaperFieldRanges } from './paper';
 
 interface PaperBlock {
 	from: number;
@@ -42,7 +42,7 @@ interface PaperBlock {
 /** Finds the current block for a widget DOM node, so stale widgets never use old positions. */
 type BlockResolver = (view: EditorView, dom: HTMLElement) => PaperBlock | undefined;
 
-const WIDGET_CLASS = 'custom-codeblocks-paper-widget';
+export const WIDGET_CLASS = 'literature-blocks-paper-widget';
 
 interface PaperEditorState {
 	livePreview: boolean;
@@ -50,56 +50,34 @@ interface PaperEditorState {
 	decorations: DecorationSet;
 }
 
-const OPENING_FENCE = /^ {0,3}(`{3,}|~{3,})[\t ]*paper(?:[\t ].*)?$/i;
-
-function escapeRegExp(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function findPaperBlocks(state: EditorState): PaperBlock[] {
-	const blocks: PaperBlock[] = [];
 	const { doc } = state;
 
-	for (let lineNumber = 1; lineNumber <= doc.lines; lineNumber++) {
-		const openingLine = doc.line(lineNumber);
-		const match = openingLine.text.match(OPENING_FENCE);
-		const fence = match?.[1];
-		if (!fence) continue;
-
-		const closingFence = new RegExp(
-			`^ {0,3}${escapeRegExp(fence[0] ?? '`')}{${fence.length},}[\\t ]*$`,
-		);
-		for (let closingLineNumber = lineNumber + 1; closingLineNumber <= doc.lines; closingLineNumber++) {
-			const closingLine = doc.line(closingLineNumber);
-			if (!closingFence.test(closingLine.text)) continue;
-
-			const firstContentLine = doc.line(Math.min(lineNumber + 1, closingLineNumber));
-			const contentFrom = firstContentLine.from;
-			const contentTo = closingLineNumber > lineNumber + 1
-				? doc.line(closingLineNumber - 1).to
-				: contentFrom;
-			const source = doc.sliceString(contentFrom, contentTo);
-			const { data, ranges } = parsePaperFields(source);
-			const fields: PaperFieldRanges = {};
-			for (const [key, range] of Object.entries(ranges) as Array<[keyof PaperData, { from: number; to: number }]>) {
-				fields[key] = { from: contentFrom + range.from, to: contentFrom + range.to };
-			}
-			blocks.push({
-				from: openingLine.from,
-				to: closingLine.to,
-				editPos: contentFrom + Math.min(7, firstContentLine.length),
-				startLine: lineNumber,
-				endLine: closingLineNumber,
-				source,
-				data,
-				fields,
-			});
-			lineNumber = closingLineNumber;
-			break;
+	return scanPaperBlocks(doc.lines, (lineNumber) => doc.line(lineNumber).text).map(({ startLine, endLine }) => {
+		const openingLine = doc.line(startLine);
+		const closingLine = doc.line(endLine);
+		const firstContentLine = doc.line(Math.min(startLine + 1, endLine));
+		const contentFrom = firstContentLine.from;
+		const contentTo = endLine > startLine + 1
+			? doc.line(endLine - 1).to
+			: contentFrom;
+		const source = doc.sliceString(contentFrom, contentTo);
+		const { data, ranges } = parsePaperFields(source);
+		const fields: PaperFieldRanges = {};
+		for (const [key, range] of Object.entries(ranges) as Array<[keyof PaperData, { from: number; to: number }]>) {
+			fields[key] = { from: contentFrom + range.from, to: contentFrom + range.to };
 		}
-	}
-
-	return blocks;
+		return {
+			from: openingLine.from,
+			to: closingLine.to,
+			editPos: contentFrom + Math.min(7, firstContentLine.length),
+			startLine,
+			endLine,
+			source,
+			data,
+			fields,
+		};
+	});
 }
 
 function selectionTouchesBlock(state: EditorState, block: PaperBlock): boolean {
@@ -123,7 +101,7 @@ class PaperCardWidget extends WidgetType {
 	private resizeObserver?: ResizeObserver;
 
 	constructor(
-		private readonly plugin: CustomCodeblocksPlugin,
+		private readonly plugin: LiteratureBlocksPlugin,
 		private readonly block: PaperBlock,
 		private readonly resolveBlock: BlockResolver,
 		private readonly sourcePath?: string,
@@ -168,7 +146,7 @@ class PaperCardWidget extends WidgetType {
 }
 
 function buildDecorations(
-	plugin: CustomCodeblocksPlugin,
+	plugin: LiteratureBlocksPlugin,
 	resolveBlock: BlockResolver,
 	state: EditorState,
 	blocks: PaperBlock[],
@@ -191,7 +169,7 @@ function isLivePreview(state: EditorState): boolean {
 }
 
 function createPaperState(
-	plugin: CustomCodeblocksPlugin,
+	plugin: LiteratureBlocksPlugin,
 	resolveBlock: BlockResolver,
 	state: EditorState,
 ): PaperEditorState {
@@ -205,7 +183,7 @@ function createPaperState(
 }
 
 function updatePaperState(
-	plugin: CustomCodeblocksPlugin,
+	plugin: LiteratureBlocksPlugin,
 	resolveBlock: BlockResolver,
 	value: PaperEditorState,
 	transaction: Transaction,
@@ -340,7 +318,7 @@ function syncSearchMatches(view: EditorView, resolveBlock: BlockResolver): void 
 	});
 }
 
-export function createPaperEditorExtension(plugin: CustomCodeblocksPlugin): Extension {
+export function createPaperEditorExtension(plugin: LiteratureBlocksPlugin): Extension {
 	const resolveBlock: BlockResolver = (view, dom) => {
 		const pos = view.posAtDOM(dom);
 		return view.state.field(paperField).blocks.find((block) => block.from <= pos && pos <= block.to);

@@ -1,20 +1,20 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import * as path from 'path';
 import * as os from 'os';
-import type CustomCodeblocksPlugin from './main';
+import type LiteratureBlocksPlugin from './main';
 
-export interface CustomCodeblocksSettings {
+export interface LiteratureBlocksSettings {
 	downloadPath: string;
 }
 
-export const DEFAULT_SETTINGS: CustomCodeblocksSettings = {
+export const DEFAULT_SETTINGS: LiteratureBlocksSettings = {
 	downloadPath: path.join(os.homedir(), 'Projects', 'literature'),
 };
 
-export class CustomCodeblocksSettingTab extends PluginSettingTab {
-	plugin: CustomCodeblocksPlugin;
+export class LiteratureBlocksSettingTab extends PluginSettingTab {
+	plugin: LiteratureBlocksPlugin;
 
-	constructor(app: App, plugin: CustomCodeblocksPlugin) {
+	constructor(app: App, plugin: LiteratureBlocksPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
