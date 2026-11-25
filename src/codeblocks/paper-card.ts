@@ -1,5 +1,5 @@
 import { Notice, setIcon } from 'obsidian';
-import type CustomCodeblocksPlugin from '../main';
+import type LiteratureBlocksPlugin from '../main';
 import {
 	downloadPaper,
 	findSavedFile,
@@ -20,7 +20,7 @@ function isCardAction(target: EventTarget | null): boolean {
 }
 
 export function renderPaperCard(
-	plugin: CustomCodeblocksPlugin,
+	plugin: LiteratureBlocksPlugin,
 	data: PaperData,
 	el: HTMLElement,
 	options: PaperCardOptions = {},

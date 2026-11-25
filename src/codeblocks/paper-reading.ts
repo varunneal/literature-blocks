@@ -4,18 +4,18 @@ import {
 	type MarkdownPostProcessorContext,
 	type WorkspaceLeaf,
 } from 'obsidian';
-import type CustomCodeblocksPlugin from '../main';
+import type LiteratureBlocksPlugin from '../main';
 import { renderPaperCard } from './paper-card';
 import { parsePaperContent } from './paper';
 
-function findMarkdownLeaf(plugin: CustomCodeblocksPlugin, sourcePath: string): WorkspaceLeaf | null {
+function findMarkdownLeaf(plugin: LiteratureBlocksPlugin, sourcePath: string): WorkspaceLeaf | null {
 	return plugin.app.workspace.getLeavesOfType('markdown').find((leaf) => (
 		leaf.view instanceof MarkdownView && leaf.view.file?.path === sourcePath
 	)) ?? null;
 }
 
 async function editPaperFromReadingView(
-	plugin: CustomCodeblocksPlugin,
+	plugin: LiteratureBlocksPlugin,
 	ctx: MarkdownPostProcessorContext,
 	lineStart: number,
 ): Promise<void> {
@@ -37,7 +37,7 @@ async function editPaperFromReadingView(
 	leaf.view.editor.focus();
 }
 
-export function registerPaperReadingProcessor(plugin: CustomCodeblocksPlugin): void {
+export function registerPaperReadingProcessor(plugin: LiteratureBlocksPlugin): void {
 	const paperProcessor = MarkdownPreviewRenderer.createCodeBlockPostProcessor(
 		'paper',
 		(source, blockEl, ctx) => {

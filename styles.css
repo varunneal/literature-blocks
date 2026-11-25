@@ -13,7 +13,7 @@
 	background: transparent !important;
 }
 
-.markdown-source-view.mod-cm6 .custom-codeblocks-paper-widget {
+.markdown-source-view.mod-cm6 .literature-blocks-paper-widget {
 	width: 100%;
 }
 
@@ -350,4 +350,14 @@
 .theme-light .token.boolean,
 .theme-light .token.constant {
 	color: #9870C3 !important;
+}
+
+/* Paper cards listed in the core Outline view */
+.tree-item-self.literature-blocks-outline-item .tree-item-inner {
+	font-style: italic;
+}
+
+.literature-blocks-paper-widget.is-outline-target .paper-card {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
 }

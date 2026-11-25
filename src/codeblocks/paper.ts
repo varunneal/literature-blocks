@@ -13,7 +13,7 @@ import * as https from 'https';
 import * as http from 'http';
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- Electron is provided by Obsidian at runtime.
 const { shell } = require('electron') as { shell: { showItemInFolder(fullPath: string): void } };
-import type CustomCodeblocksPlugin from '../main';
+import type LiteratureBlocksPlugin from '../main';
 
 export interface PaperData {
 	title: string;
@@ -52,6 +52,40 @@ export function parsePaperFields(source: string): { data: PaperData; ranges: Pap
 	}
 
 	return { data, ranges };
+}
+
+const OPENING_FENCE = /^ {0,3}(`{3,}|~{3,})[\t ]*paper(?:[\t ].*)?$/i;
+
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Fence lines of a paper block, as 1-based line numbers. */
+export interface PaperBlockLines {
+	startLine: number;
+	endLine: number;
+}
+
+/** Finds fenced paper blocks. `getLine` takes a 1-based line number. */
+export function scanPaperBlocks(lineCount: number, getLine: (lineNumber: number) => string): PaperBlockLines[] {
+	const blocks: PaperBlockLines[] = [];
+
+	for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
+		const fence = getLine(lineNumber).match(OPENING_FENCE)?.[1];
+		if (!fence) continue;
+
+		const closingFence = new RegExp(
+			`^ {0,3}${escapeRegExp(fence[0] ?? '`')}{${fence.length},}[\\t ]*$`,
+		);
+		for (let closingLineNumber = lineNumber + 1; closingLineNumber <= lineCount; closingLineNumber++) {
+			if (!closingFence.test(getLine(closingLineNumber))) continue;
+			blocks.push({ startLine: lineNumber, endLine: closingLineNumber });
+			lineNumber = closingLineNumber;
+			break;
+		}
+	}
+
+	return blocks;
 }
 
 export function parsePaperContent(source: string): PaperData {
@@ -180,7 +214,7 @@ function extractTexFromTarball(buffer: Buffer, dir: string): void {
 }
 
 export function getPaperDir(
-	plugin: CustomCodeblocksPlugin,
+	plugin: LiteratureBlocksPlugin,
 	data: PaperData,
 	sourcePath?: string,
 ): { dir: string; pdfPath: string; mdPath: string } | null {
@@ -214,7 +248,7 @@ export function revealInFileManager(filepath: string): void {
 }
 
 export async function downloadPaper(
-	plugin: CustomCodeblocksPlugin,
+	plugin: LiteratureBlocksPlugin,
 	data: PaperData,
 	btn: HTMLButtonElement,
 	sourcePath?: string,

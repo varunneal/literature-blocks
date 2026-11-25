@@ -1,17 +1,19 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
 import { createPaperEditorExtension } from './codeblocks/paper-editor';
 import { registerPaperReadingProcessor } from './codeblocks/paper-reading';
-import { CustomCodeblocksSettings, CustomCodeblocksSettingTab, DEFAULT_SETTINGS } from './settings';
+import { registerPaperOutline } from './outline';
+import { LiteratureBlocksSettings, LiteratureBlocksSettingTab, DEFAULT_SETTINGS } from './settings';
 
-export default class CustomCodeblocksPlugin extends Plugin {
-	settings: CustomCodeblocksSettings = DEFAULT_SETTINGS;
+export default class LiteratureBlocksPlugin extends Plugin {
+	settings: LiteratureBlocksSettings = DEFAULT_SETTINGS;
 
 	async onload() {
 		await this.loadSettings();
-		this.addSettingTab(new CustomCodeblocksSettingTab(this.app, this));
+		this.addSettingTab(new LiteratureBlocksSettingTab(this.app, this));
 
 		registerPaperReadingProcessor(this);
 		this.registerEditorExtension(createPaperEditorExtension(this));
+		registerPaperOutline(this);
 
 		this.addCommand({
 			id: 'insert-paper',
@@ -34,7 +36,7 @@ export default class CustomCodeblocksPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		const savedSettings = await this.loadData() as Partial<CustomCodeblocksSettings> | null;
+		const savedSettings = await this.loadData() as Partial<LiteratureBlocksSettings> | null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, savedSettings);
 	}
 
