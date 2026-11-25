@@ -28,7 +28,7 @@
 	border-left: 2px solid var(--text-normal);
 	background-color: var(--background-secondary);
 	border-radius: 0 4px 4px 0;
-	transition: background-color 0.15s ease;
+	transition: background-color 0.15s ease, border-left-color 0.4s ease;
 	line-height: 1.5;
 }
 
@@ -357,7 +357,7 @@
 	font-style: italic;
 }
 
-/* Inset, because the editor clips anything drawn outside the card. */
+/* Briefly tints the card's left edge after jumping to it from the outline. */
 .literature-blocks-paper-widget.is-outline-target .paper-card {
-	box-shadow: inset 0 0 0 2px var(--interactive-accent);
+	border-left-color: var(--interactive-accent);
 }
