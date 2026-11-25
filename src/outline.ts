@@ -68,8 +68,9 @@ function findPaperHeadings(text: string, cache: CachedMetadata): PaperHeading[] 
 	for (const { startLine, endLine } of scanPaperBlocks(lines.length, (lineNumber) => lines[lineNumber - 1] ?? '')) {
 		const position = codeSections.get(startLine - 1);
 		if (!position) continue;
-		const { title } = parsePaperContent(lines.slice(startLine, endLine - 1).join('\n'));
-		headings.push({ heading: title || 'Untitled', level: 1, position, isPaper: true });
+		const { title, date } = parsePaperContent(lines.slice(startLine, endLine - 1).join('\n'));
+		const heading = (title || 'Untitled') + (date ? ` (${date})` : '');
+		headings.push({ heading, level: 1, position, isPaper: true });
 	}
 	return headings;
 }

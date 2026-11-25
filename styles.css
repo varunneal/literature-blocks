@@ -71,14 +71,6 @@
 	color: var(--text-normal);
 }
 
-.paper-card-date {
-	font-variant: normal;
-	font-size: 0.9em;
-	letter-spacing: normal;
-	color: var(--text-muted);
-	white-space: nowrap;
-}
-
 .paper-card-meta {
 	font-family: "Times New Roman", "Palatino Linotype", "Georgia", serif;
 	color: var(--text-muted);

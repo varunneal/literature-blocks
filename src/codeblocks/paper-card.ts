@@ -101,17 +101,19 @@ export function renderPaperCard(
 	if (data.title) {
 		titleEl.createSpan({ text: data.title, attr: { 'data-paper-field': 'title' } });
 	} else {
-		titleEl.appendText('Untitled');
-	}
-	if (data.date) {
-		const dateEl = titleEl.createSpan({ cls: 'paper-card-date', text: ' (' });
-		dateEl.createSpan({ text: data.date, attr: { 'data-paper-field': 'date' } });
-		dateEl.appendText(')');
+		titleEl.setText('Untitled');
 	}
 
-	if (data.authors) {
-		container.createDiv({ cls: 'paper-card-meta' })
-			.createSpan({ text: data.authors, attr: { 'data-paper-field': 'authors' } });
+	if (data.authors || data.date) {
+		const metaEl = container.createDiv({ cls: 'paper-card-meta' });
+		if (data.authors) {
+			metaEl.createSpan({ text: data.authors, attr: { 'data-paper-field': 'authors' } });
+		}
+		if (data.date) {
+			if (data.authors) metaEl.appendText(' (');
+			metaEl.createSpan({ text: data.date, attr: { 'data-paper-field': 'date' } });
+			if (data.authors) metaEl.appendText(')');
+		}
 	}
 
 	return container;
