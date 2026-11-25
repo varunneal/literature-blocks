@@ -5,10 +5,13 @@ import type LiteratureBlocksPlugin from './main';
 
 export interface LiteratureBlocksSettings {
 	downloadPath: string;
+	/** Whether paper cards are listed in the core Outline view. */
+	showPapersInOutline: boolean;
 }
 
 export const DEFAULT_SETTINGS: LiteratureBlocksSettings = {
 	downloadPath: path.join(os.homedir(), 'Projects', 'literature'),
+	showPapersInOutline: true,
 };
 
 export class LiteratureBlocksSettingTab extends PluginSettingTab {
