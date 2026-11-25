@@ -27,7 +27,6 @@ const OUTLINE_ITEM_CLASS = 'literature-blocks-outline-item';
 const FLASH_CLASS = 'is-outline-target';
 const FLASH_MS = 1500;
 const TOGGLE_CLASS = 'literature-blocks-outline-toggle';
-const TOGGLE_LABEL = 'Show literature cards';
 /** A paper card in miniature: its left bar, a title line and a meta line. */
 const TOGGLE_ICON_PATHS = ['M4 5v14', 'M9 9h11', 'M9 15h7'];
 
@@ -76,7 +75,7 @@ function findPaperHeadings(text: string, cache: CachedMetadata): PaperHeading[] 
 }
 
 function createToggleButton(parent: HTMLElement, onClick: () => void): HTMLElement {
-	const button = parent.createDiv({ cls: `clickable-icon nav-action-button ${TOGGLE_CLASS}`, attr: { 'aria-label': TOGGLE_LABEL } });
+	const button = parent.createDiv({ cls: `clickable-icon nav-action-button ${TOGGLE_CLASS}` });
 	const svg = button.createSvg('svg', {
 		cls: 'svg-icon',
 		attr: {
@@ -95,6 +94,12 @@ function createToggleButton(parent: HTMLElement, onClick: () => void): HTMLEleme
 	// Sits before the collapse-all button, which Obsidian keeps last.
 	parent.insertBefore(button, parent.lastElementChild);
 	return button;
+}
+
+/** Highlights the button while cards are shown, and names what a click will do. */
+function setToggleState(button: HTMLElement, shown: boolean): void {
+	button.toggleClass('is-active', shown);
+	button.setAttribute('aria-label', shown ? 'Hide literature cards' : 'Show literature cards');
 }
 
 /** Interleaves papers with headings, one level below the heading above each. */
@@ -207,7 +212,7 @@ export function registerPaperOutline(plugin: LiteratureBlocksPlugin): void {
 
 	const toggleShown = async () => {
 		plugin.settings.showPapersInOutline = !plugin.settings.showPapersInOutline;
-		for (const button of toggleButtons()) button.toggleClass('is-active', plugin.settings.showPapersInOutline);
+		for (const button of toggleButtons()) setToggleState(button, plugin.settings.showPapersInOutline);
 		refresh();
 		await plugin.saveSettings();
 	};
@@ -221,8 +226,7 @@ export function registerPaperOutline(plugin: LiteratureBlocksPlugin): void {
 		for (const view of views) {
 			const buttons = view.containerEl.querySelector<HTMLElement>('.nav-buttons-container');
 			if (!buttons || buttons.querySelector(`.${TOGGLE_CLASS}`)) continue;
-			createToggleButton(buttons, () => void toggleShown())
-				.toggleClass('is-active', plugin.settings.showPapersInOutline);
+			setToggleState(createToggleButton(buttons, () => void toggleShown()), plugin.settings.showPapersInOutline);
 		}
 		if (unpatch || !views[0]) return;
 		unpatch = patchOutline(views[0]);
