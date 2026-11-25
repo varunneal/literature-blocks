@@ -26,6 +26,10 @@ const OUTLINE_VIEW_TYPE = 'outline';
 const OUTLINE_ITEM_CLASS = 'literature-blocks-outline-item';
 const FLASH_CLASS = 'is-outline-target';
 const FLASH_MS = 1500;
+const TOGGLE_CLASS = 'literature-blocks-outline-toggle';
+const TOGGLE_LABEL = 'Show literature cards';
+/** A paper card in miniature: its left bar, a title line and a meta line. */
+const TOGGLE_ICON_PATHS = ['M4 5v14', 'M9 9h11', 'M9 15h7'];
 
 interface PaperHeading extends HeadingCache {
 	isPaper: true;
@@ -37,6 +41,7 @@ interface OutlineView extends View {
 	getHeadings(): HeadingCache[];
 	createItemDom(heading: HeadingCache): { selfEl: HTMLElement };
 	update(): void;
+	containerEl: HTMLElement;
 	findCorrespondingLeaf(): WorkspaceLeaf | null;
 }
 
@@ -67,6 +72,28 @@ function findPaperHeadings(text: string, cache: CachedMetadata): PaperHeading[] 
 		headings.push({ heading: title || 'Untitled', level: 1, position, isPaper: true });
 	}
 	return headings;
+}
+
+function createToggleButton(parent: HTMLElement, onClick: () => void): HTMLElement {
+	const button = parent.createDiv({ cls: `clickable-icon nav-action-button ${TOGGLE_CLASS}`, attr: { 'aria-label': TOGGLE_LABEL } });
+	const svg = button.createSvg('svg', {
+		cls: 'svg-icon',
+		attr: {
+			viewBox: '0 0 24 24',
+			width: 24,
+			height: 24,
+			fill: 'none',
+			stroke: 'currentColor',
+			'stroke-width': 2,
+			'stroke-linecap': 'round',
+			'stroke-linejoin': 'round',
+		},
+	});
+	for (const d of TOGGLE_ICON_PATHS) svg.createSvg('path', { attr: { d } });
+	button.addEventListener('click', onClick);
+	// Sits before the collapse-all button, which Obsidian keeps last.
+	parent.insertBefore(button, parent.lastElementChild);
+	return button;
 }
 
 /** Interleaves papers with headings, one level below the heading above each. */
@@ -157,7 +184,7 @@ export function registerPaperOutline(plugin: LiteratureBlocksPlugin): void {
 			const headings = next.call(this);
 			const file = this.file;
 			const cache = file?.extension === 'md' ? metadataCache.getFileCache(file) : null;
-			const papers = file && cache ? papersFor(file, cache) : null;
+			const papers = file && cache && plugin.settings.showPapersInOutline ? papersFor(file, cache) : null;
 			return papers ? mergeHeadings(headings, papers) : headings;
 		},
 		createItemDom: (next) => function (this: OutlineView, heading: HeadingCache) {
@@ -174,13 +201,30 @@ export function registerPaperOutline(plugin: LiteratureBlocksPlugin): void {
 		},
 	});
 
+	const toggleButtons = () => outlineViews()
+		.flatMap((view) => Array.from(view.containerEl.querySelectorAll<HTMLElement>(`.${TOGGLE_CLASS}`)));
+
+	const toggleShown = async () => {
+		plugin.settings.showPapersInOutline = !plugin.settings.showPapersInOutline;
+		for (const button of toggleButtons()) button.toggleClass('is-active', plugin.settings.showPapersInOutline);
+		refresh();
+		await plugin.saveSettings();
+	};
+
 	// The outline view class is only reachable through a loaded outline view,
-	// which may not exist yet (the sidebar tab can be deferred or closed).
+	// which may not exist yet (the sidebar tab can be deferred or closed), so
+	// this runs again whenever the layout changes.
 	let unpatch: (() => void) | null = null;
-	const tryPatch = () => {
-		const view = unpatch ? undefined : outlineViews()[0];
-		if (!view) return;
-		unpatch = patchOutline(view);
+	const sync = () => {
+		const views = outlineViews();
+		for (const view of views) {
+			const buttons = view.containerEl.querySelector<HTMLElement>('.nav-buttons-container');
+			if (!buttons || buttons.querySelector(`.${TOGGLE_CLASS}`)) continue;
+			createToggleButton(buttons, () => void toggleShown())
+				.toggleClass('is-active', plugin.settings.showPapersInOutline);
+		}
+		if (unpatch || !views[0]) return;
+		unpatch = patchOutline(views[0]);
 		refresh();
 	};
 
@@ -188,12 +232,13 @@ export function registerPaperOutline(plugin: LiteratureBlocksPlugin): void {
 		// Obsidian debounces the outline redraw, so this lands before it.
 		papersByCache.set(cache, findPaperHeadings(data, cache));
 	}));
-	plugin.registerEvent(workspace.on('layout-change', tryPatch));
-	plugin.registerEvent(workspace.on('active-leaf-change', tryPatch));
-	workspace.onLayoutReady(tryPatch);
+	plugin.registerEvent(workspace.on('layout-change', sync));
+	plugin.registerEvent(workspace.on('active-leaf-change', sync));
+	workspace.onLayoutReady(sync);
 
 	plugin.register(() => {
 		unpatch?.();
+		for (const button of toggleButtons()) button.remove();
 		refresh();
 	});
 }

@@ -21,13 +21,14 @@ link: https://arxiv.org/abs/1706.03762
 
 A styled card with:
 - Bold title
-- Authors and date in muted text
+- Date in parentheses after the title
+- Authors in muted text
 - PDF icon linking to the paper (top right)
 - Click anywhere on the card to edit
 
 **Outline:**
 
-Each card is listed in Obsidian's core Outline view by its title, nested under the heading it sits below. Selecting it scrolls to the card. This hooks into internals of the core Outline view, so it may stop working after an Obsidian update; the outline then falls back to headings only.
+Each card is listed in Obsidian's core Outline view by its title, nested under the heading it sits below. Selecting it scrolls to the card. The card button at the top of the Outline view shows or hides these entries. This hooks into internals of the core Outline view, so it may stop working after an Obsidian update; the outline then falls back to headings only.
 
 ## Installation
 

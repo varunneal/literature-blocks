@@ -46,7 +46,7 @@
 
 /* Match in text the card hides, such as the link or a field key. */
 .paper-card.is-search-match {
-	box-shadow: 0 0 0 2px var(--text-accent);
+	box-shadow: inset 0 0 0 2px var(--text-accent);
 }
 
 .paper-card[role="button"] {
@@ -55,7 +55,7 @@
 
 .paper-card:focus-visible {
 	outline: 2px solid var(--interactive-accent);
-	outline-offset: 2px;
+	outline-offset: -2px;
 }
 
 .paper-card:hover {
@@ -69,6 +69,14 @@
 	font-size: 1.1em;
 	letter-spacing: 0.02em;
 	color: var(--text-normal);
+}
+
+.paper-card-date {
+	font-variant: normal;
+	font-size: 0.9em;
+	letter-spacing: normal;
+	color: var(--text-muted);
+	white-space: nowrap;
 }
 
 .paper-card-meta {
@@ -357,7 +365,7 @@
 	font-style: italic;
 }
 
+/* Inset, because the editor clips anything drawn outside the card. */
 .literature-blocks-paper-widget.is-outline-target .paper-card {
-	outline: 2px solid var(--interactive-accent);
-	outline-offset: 2px;
+	box-shadow: inset 0 0 0 2px var(--interactive-accent);
 }
